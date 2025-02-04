@@ -1,0 +1,11 @@
+*
+
+!/include/
+!/include/**
+!/src/
+!/src/**
+!/tests/
+!/tests/**
+
+!.gitignore
+!CMakeLists.txt
