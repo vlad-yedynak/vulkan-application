@@ -13,6 +13,8 @@ const uint32_t Y_POS = 0;
 const uint32_t WIDTH = 800;
 const uint32_t HEIGHT = 600;
 
+const int MAX_FRAMES_IN_FLIGHT = 2;
+
 const std::vector<const char *> validationLayers = {"VK_LAYER_KHRONOS_validation"};
 const std::vector<const char *> deviceExtensions = {VK_KHR_SWAPCHAIN_EXTENSION_NAME,
                                                     VK_KHR_PORTABILITY_SUBSET_EXTENSION_NAME};
@@ -52,8 +54,8 @@ private:
     VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
     VkDevice device = VK_NULL_HANDLE;
 
-    VkQueue graphicsQueue = VK_NULL_HANDLE;
-    VkQueue presentQueue = VK_NULL_HANDLE;
+    VkQueue graphicsQueue;
+    VkQueue presentQueue;
 
     VkSurfaceKHR surface = VK_NULL_HANDLE;
 
@@ -64,11 +66,32 @@ private:
 
     std::vector<VkImageView> swapchainImageViews;
 
+    VkRenderPass renderPass = VK_NULL_HANDLE;
+    VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
+    VkPipeline graphicsPipeline = VK_NULL_HANDLE;
+
+    std::vector<VkFramebuffer> swapchainFramebuffers;
+
+    uint32_t currentFrame = 0;
+
+    VkCommandPool commandPool = VK_NULL_HANDLE;
+    std::vector<VkCommandBuffer> commandBuffers;
+
+    std::vector<VkSemaphore> imageAvailableSemaphores;
+    std::vector<VkSemaphore> renderFinishedSemaphores;
+    std::vector<VkFence> inFlightFences;
+
+    bool framebufferResized = false;
+
     void initWindow();
 
     void initVulkan();
 
     void mainLoop();
+
+    void processWindowEvent(SDL_WindowEvent windowEvent);
+
+    void drawFrame();
 
     void createInstance();
 
@@ -78,7 +101,27 @@ private:
 
     void createSwapchain();
 
+    void cleanupSwapchain();
+
+    void recreateSwapchain();
+
     void createImageViews();
+
+    void createRenderPass();
+
+    void createGraphicsPipeline();
+
+    VkShaderModule createShaderModule(const std::vector<char>& code);
+
+    void createFramebuffers();
+
+    void createCommandPool();
+
+    void createCommandBuffers();
+
+    void recordCommandBuffer(VkCommandBuffer cmdBuffer, uint32_t imageIndex);
+
+    void createSyncObjects();
 
     bool checkValidationLayerSupport();
 

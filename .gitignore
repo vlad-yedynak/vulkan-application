@@ -6,6 +6,8 @@
 !/src/**
 !/tests/
 !/tests/**
+!/shaders/
+!/shaders/**
 
 !.gitignore
 !CMakeLists.txt
