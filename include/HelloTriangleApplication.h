@@ -1,80 +1,132 @@
 #ifndef INC_3D_ENGINE_HELLOTRIANGLEAPPLICATION_H
 #define INC_3D_ENGINE_HELLOTRIANGLEAPPLICATION_H
 
-#include <vulkan/vulkan.h>
-#include <vulkan/vulkan_beta.h>
-#include <SDL2/SDL.h>
-
-#include <vector>
-#include <optional>
-
-const uint32_t X_POS = 0;
-const uint32_t Y_POS = 0;
-const uint32_t WIDTH = 800;
-const uint32_t HEIGHT = 600;
-
-const int MAX_FRAMES_IN_FLIGHT = 2;
-
-const std::vector<const char *> validationLayers = {"VK_LAYER_KHRONOS_validation"};
-const std::vector<const char *> deviceExtensions = {VK_KHR_SWAPCHAIN_EXTENSION_NAME,
-                                                    VK_KHR_PORTABILITY_SUBSET_EXTENSION_NAME};
-const std::vector<const char *> instanceExtensions = {VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME,
-                                                      VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME};
-
 #ifdef NDEBUG
 const bool enableValidationLayers = false;
 #else
 const bool enableValidationLayers = true;
 #endif
 
+#include <vulkan/vulkan.h>
+#include <vulkan/vulkan_beta.h>
+#include <SDL2/SDL.h>
+
+#include <glm/glm.hpp>
+#include <vector>
+#include <set>
+#include <array>
+
+#include <optional>
+
+const uint32_t X_POS = 0;
+const uint32_t Y_POS = 0;
+const uint32_t WIDTH = 800;
+
+const uint32_t HEIGHT = 600;
+
+const int MAX_FRAMES_IN_FLIGHT = 2;
+const std::vector<const char *> validationLayers = {"VK_LAYER_KHRONOS_validation"};
+const std::vector<const char *> deviceExtensions = {VK_KHR_SWAPCHAIN_EXTENSION_NAME,
+                                                    VK_KHR_PORTABILITY_SUBSET_EXTENSION_NAME};
+
+const std::vector<const char *> instanceExtensions = {VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME,
+                                                      VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME};
+
+struct QueueFamilies {
+    std::optional<uint32_t> graphicsFamily;
+    std::optional<uint32_t> transferFamily;
+    std::optional<uint32_t> presentFamily;
+
+    bool isComplete() {
+        return graphicsFamily.has_value() && transferFamily.has_value() && presentFamily.has_value();
+    }
+};
+
+struct SwapchainSupportDetails {
+    VkSurfaceCapabilitiesKHR capabilities;
+    std::vector<VkSurfaceFormatKHR> formats;
+    std::vector<VkPresentModeKHR> presentModes;
+};
+
+struct Vertex {
+    glm::vec2 pos;
+    glm::vec3 color;
+
+    static VkVertexInputBindingDescription getBindingDescription() {
+        VkVertexInputBindingDescription bindingDescription{};
+
+        bindingDescription.binding = 0;
+        bindingDescription.stride = sizeof(Vertex);
+        bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+
+        return bindingDescription;
+    }
+
+    static std::array<VkVertexInputAttributeDescription, 2> getAttributeDescriptions() {
+        std::array<VkVertexInputAttributeDescription, 2> attributeDescriptions{};
+
+        attributeDescriptions[0].binding = 0;
+        attributeDescriptions[0].location = 0;
+        attributeDescriptions[0].format = VK_FORMAT_R32G32_SFLOAT;
+        attributeDescriptions[0].offset = offsetof(Vertex, pos);
+
+        attributeDescriptions[1].binding = 0;
+        attributeDescriptions[1].location = 1;
+        attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
+        attributeDescriptions[1].offset = offsetof(Vertex, color);
+
+        return attributeDescriptions;
+    }
+};
+
+const std::vector<Vertex> vertices = {
+        {{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}},
+        {{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}},
+        {{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}},
+        {{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}}
+};
+
+const std::vector<uint16_t> indices = {
+        0, 1, 2, 2, 3, 0
+};
+
 class HelloTriangleApplication {
 public:
     void run();
 
 private:
-    struct QueueFamilyIndices {
-        std::optional<uint32_t> graphicsFamily;
-        std::optional<uint32_t> presentFamily;
+    VkInstance instance;
+    SDL_Window *window;
+    VkDebugUtilsMessengerEXT debugMessenger;
 
-        bool isComplete() {
-            return graphicsFamily.has_value() && presentFamily.has_value();
-        }
-    };
+    VkPhysicalDevice physicalDevice;
+    VkDevice device;
 
-    struct SwapchainSupportDetails {
-        VkSurfaceCapabilitiesKHR capabilities;
-        std::vector<VkSurfaceFormatKHR> formats;
-        std::vector<VkPresentModeKHR> presentModes;
-    };
-
-    VkInstance instance = VK_NULL_HANDLE;
-    SDL_Window *window = nullptr;
-    VkDebugUtilsMessengerEXT debugMessenger = VK_NULL_HANDLE;
-
-    VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
-    VkDevice device = VK_NULL_HANDLE;
-
+    QueueFamilies queueFamilies;
+    std::set<uint32_t> queueFamilyIndices;
     VkQueue graphicsQueue;
     VkQueue presentQueue;
+    VkQueue transferQueue;
 
-    VkSurfaceKHR surface = VK_NULL_HANDLE;
+    VkSurfaceKHR surface;
 
-    VkSwapchainKHR swapchain = VK_NULL_HANDLE;
+    VkSwapchainKHR swapchain;
     std::vector<VkImage> swapchainImages;
     VkFormat swapchainImageFormat;
     VkExtent2D swapchainExtent;
 
     std::vector<VkImageView> swapchainImageViews;
 
-    VkRenderPass renderPass = VK_NULL_HANDLE;
-    VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
-    VkPipeline graphicsPipeline = VK_NULL_HANDLE;
+    VkRenderPass renderPass;
+    VkPipelineLayout pipelineLayout;
+    VkPipeline graphicsPipeline;
 
     std::vector<VkFramebuffer> swapchainFramebuffers;
 
-    uint32_t currentFrame = 0;
+    uint32_t currentFrame;
 
-    VkCommandPool commandPool = VK_NULL_HANDLE;
+    VkCommandPool graphicsCommandPool;
+    VkCommandPool transferCommandPool;
     std::vector<VkCommandBuffer> commandBuffers;
 
     std::vector<VkSemaphore> imageAvailableSemaphores;
@@ -82,6 +134,11 @@ private:
     std::vector<VkFence> inFlightFences;
 
     bool framebufferResized = false;
+
+    VkBuffer vertexBuffer;
+    VkDeviceMemory vertexBufferMemory;
+    VkBuffer indexBuffer;
+    VkDeviceMemory indexBufferMemory;
 
     void initWindow();
 
@@ -115,7 +172,19 @@ private:
 
     void createFramebuffers();
 
-    void createCommandPool();
+    void createGraphicsCommandPool();
+
+    void createTransferCommandPool();
+
+    void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
+
+    void createVertexBuffer();
+
+    void createIndexBuffer();
+
+    void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
+
+    uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
 
     void createCommandBuffers();
 
@@ -141,7 +210,7 @@ private:
 
     bool isDeviceSuitable(VkPhysicalDevice dvc);
 
-    QueueFamilyIndices findQueueFamilies(VkPhysicalDevice dvc);
+    QueueFamilies findQueueFamilies(VkPhysicalDevice dvc);
 
     SwapchainSupportDetails querySwapchainSupport(VkPhysicalDevice dvc);
 
@@ -155,5 +224,10 @@ private:
 
     void cleanup();
 };
+
+/*
+ * TODO: Integrate VulkanMemoryAllocator for memory operations
+ * Library: https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator
+ */
 
 #endif //INC_3D_ENGINE_HELLOTRIANGLEAPPLICATION_H
