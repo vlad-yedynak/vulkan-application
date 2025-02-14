@@ -4,8 +4,8 @@ project(3d_engine)
 set(CMAKE_CXX_STANDARD 17)
 
 add_executable(3d_engine tests/main.cpp
-        src/HelloTriangleApplication.cpp
-        include/HelloTriangleApplication.h
+        src/VulkanApplication.cpp
+        include/VulkanApplication.h
         include/utilities.h
         src/utilities.cpp)
 

@@ -1,10 +1,10 @@
 #include <iostream>
 #include <cstdlib>
 
-#include "../include/HelloTriangleApplication.h"
+#include "../include/VulkanApplication.h"
 
 int main() {
-    HelloTriangleApplication app{};
+    VulkanApplication app{};
 
     try {
         app.run();

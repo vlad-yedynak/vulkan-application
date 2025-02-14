@@ -1,5 +1,5 @@
-#ifndef INC_3D_ENGINE_HELLOTRIANGLEAPPLICATION_H
-#define INC_3D_ENGINE_HELLOTRIANGLEAPPLICATION_H
+#ifndef INC_3D_ENGINE_VULKANAPPLICATION_H
+#define INC_3D_ENGINE_VULKANAPPLICATION_H
 
 #ifdef NDEBUG
 const bool enableValidationLayers = false;
@@ -11,6 +11,8 @@ const bool enableValidationLayers = true;
 #include <vulkan/vulkan_beta.h>
 #include <SDL2/SDL.h>
 
+#define GLM_FORCE_RADIANS
+#define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
 #include <glm/glm.hpp>
 #include <vector>
 #include <set>
@@ -21,7 +23,6 @@ const bool enableValidationLayers = true;
 const uint32_t X_POS = 0;
 const uint32_t Y_POS = 0;
 const uint32_t WIDTH = 800;
-
 const uint32_t HEIGHT = 600;
 
 const int MAX_FRAMES_IN_FLIGHT = 2;
@@ -90,7 +91,13 @@ const std::vector<uint16_t> indices = {
         0, 1, 2, 2, 3, 0
 };
 
-class HelloTriangleApplication {
+struct UniformBufferObject {
+    alignas(16) glm::mat4 model;
+    alignas(16) glm::mat4 view;
+    alignas(16) glm::mat4 proj;
+};
+
+class VulkanApplication {
 public:
     void run();
 
@@ -117,28 +124,41 @@ private:
 
     std::vector<VkImageView> swapchainImageViews;
 
-    VkRenderPass renderPass;
+    VkDescriptorSetLayout descriptorSetLayout;
     VkPipelineLayout pipelineLayout;
-    VkPipeline graphicsPipeline;
 
+    VkPipeline graphicsPipeline;
     std::vector<VkFramebuffer> swapchainFramebuffers;
 
+    VkRenderPass renderPass;
     uint32_t currentFrame;
 
+    VkDescriptorPool descriptorPool;
     VkCommandPool graphicsCommandPool;
     VkCommandPool transferCommandPool;
-    std::vector<VkCommandBuffer> commandBuffers;
+
+    std::vector<VkDescriptorSet> descriptorSets;
 
     std::vector<VkSemaphore> imageAvailableSemaphores;
+
     std::vector<VkSemaphore> renderFinishedSemaphores;
     std::vector<VkFence> inFlightFences;
-
     bool framebufferResized = false;
+
+    std::vector<VkCommandBuffer> commandBuffers;
 
     VkBuffer vertexBuffer;
     VkDeviceMemory vertexBufferMemory;
+
     VkBuffer indexBuffer;
     VkDeviceMemory indexBufferMemory;
+
+    std::vector<VkBuffer> uniformBuffers;
+    std::vector<VkDeviceMemory> uniformBuffersMemory;
+    std::vector<void *> uniformBuffersMapped;
+
+    float angleZ = 0.0f;
+    float angleX = 0.0f;
 
     void initWindow();
 
@@ -148,7 +168,11 @@ private:
 
     void processWindowEvent(SDL_WindowEvent windowEvent);
 
+    void processKeyEvent(SDL_KeyboardEvent keyboardEvent);
+
     void drawFrame();
+
+    void updateUniformBuffer(uint32_t currentImage);
 
     void createInstance();
 
@@ -166,6 +190,8 @@ private:
 
     void createRenderPass();
 
+    void createDescriptorSetLayout();
+
     void createGraphicsPipeline();
 
     VkShaderModule createShaderModule(const std::vector<char>& code);
@@ -181,6 +207,12 @@ private:
     void createVertexBuffer();
 
     void createIndexBuffer();
+
+    void createUniformBuffers();
+
+    void createDescriptorPool();
+
+    void createDescriptorSets();
 
     void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
 
@@ -230,4 +262,4 @@ private:
  * Library: https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator
  */
 
-#endif //INC_3D_ENGINE_HELLOTRIANGLEAPPLICATION_H
+#endif //INC_3D_ENGINE_VULKANAPPLICATION_H
